@@ -1,0 +1,40 @@
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+*.log
+*.iml
+.idea/
+.vscode/
+.metadata
+
+# Android (machine-specific or generated)
+android/.gradle/
+android/local.properties
+android/gradle-wrapper.jar
+android/.kotlin/
+android/app/.cxx/
+android/app/debug/
+android/app/profile/
+android/app/release/
+**/android/captures/
+**/android/key.properties
+*.jks
+*.keystore
+GeneratedPluginRegistrant.java
+GeneratedPluginRegistrant.*
+
+# iOS / macOS (generated)
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/ephemeral/
+**/macos/Pods/
+**/macos/Flutter/ephemeral/
+
+# OS
+.DS_Store
+Thumbs.db
