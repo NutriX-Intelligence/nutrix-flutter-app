@@ -38,3 +38,7 @@ GeneratedPluginRegistrant.*
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated with machine-specific paths
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
