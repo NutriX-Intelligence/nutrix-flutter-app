@@ -1,3 +1,4 @@
+import '../../widgets/common/nx_markdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
@@ -222,7 +223,7 @@ class _AiRecipeGenScreenState extends ConsumerState<AiRecipeGenScreen> {
                   children: [
                     const Text('Generated Recipe', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                     const SizedBox(height: AppSpacing.lg),
-                    SelectableText(_generatedRecipe!, style: TextStyle(height: 1.6, color: context.textMain)),
+                    NxMarkdown(_generatedRecipe!),
                     const SizedBox(height: AppSpacing.lg),
                     SizedBox(
                       width: double.infinity,

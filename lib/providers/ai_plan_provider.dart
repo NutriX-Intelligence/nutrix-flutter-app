@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
 import '../core/api/api_client.dart';
 import '../core/api/api_endpoints.dart';
@@ -7,20 +6,25 @@ import 'auth_provider.dart';
 
 class AiPlanState {
   final bool isLoading;
-  final List<dynamic>? dietPlan;
+  /// Markdown text (never a list) as returned by POST /ai/diet-plan.
+  final String? dietPlan;
+  /// Who answered: gemini | local | offline.
+  final String? planSource;
   final dynamic recipeResult;
   final String? error;
 
   AiPlanState({
     this.isLoading = false,
     this.dietPlan,
+    this.planSource,
     this.recipeResult,
     this.error,
   });
 
   AiPlanState copyWith({
     bool? isLoading,
-    List<dynamic>? dietPlan,
+    String? dietPlan,
+    String? planSource,
     dynamic recipeResult,
     String? error,
     bool clearError = false,
@@ -28,6 +32,7 @@ class AiPlanState {
     return AiPlanState(
       isLoading: isLoading ?? this.isLoading,
       dietPlan: dietPlan ?? this.dietPlan,
+      planSource: planSource ?? this.planSource,
       recipeResult: recipeResult ?? this.recipeResult,
       error: clearError ? null : (error ?? this.error),
     );
@@ -53,9 +58,11 @@ class AiPlanNotifier extends StateNotifier<AiPlanState> {
       }
 
       final apiClient = ApiClient();
+      // The backend uses the goal and diet sent here instead of the saved profile.
       final payload = {
         'user_id': user.id,
-        'preference': goal == 'weight loss' ? 'low_fat' : (goal == 'muscle gain' ? 'high_protein' : 'balanced'),
+        'goal': goal == 'weight loss' ? 'fat loss' : goal,
+        'diet_type': dietType == 'standard' ? 'any' : dietType,
       };
 
       final response = await apiClient.dio.post(
@@ -63,39 +70,15 @@ class AiPlanNotifier extends StateNotifier<AiPlanState> {
         data: payload,
       );
 
+      // `plan` is a Markdown string. Do not cast it to a list.
       final data = response.data;
-      List<dynamic> plan = [];
-
-      if (data is Map && data.containsKey('meals') && data.containsKey('plan_date')) {
-        // Map the new OR-Tools schema to the old UI format
-        String dateStr = data['plan_date'];
-        try {
-          final parsedDate = DateTime.parse(dateStr);
-          dateStr = DateFormat('MMM d, yyyy').format(parsedDate);
-        } catch (_) {}
-        final mealsMap = data['meals'] as Map<String, dynamic>;
-        
-        List<dynamic> mealsList = [];
-        mealsMap.forEach((mealType, mealData) {
-          mealsList.add({
-            'type': mealType,
-            'name': mealData['recipe_name'] ?? '',
-            'calories': mealData['calories']?.round() ?? 0,
-            'protein': mealData['protein_g']?.round() ?? 0,
-          });
-        });
-
-        plan.add({
-          'day': dateStr, // This passes the date directly as 'day'
-          'meals': mealsList,
-        });
-      } else if (data is Map && data.containsKey('plan')) {
-        plan = data['plan'] as List;
-      } else if (data is List) {
-        plan = data;
+      final plan = (data is Map ? data['plan'] : null)?.toString() ?? '';
+      final source = (data is Map ? data['source'] : null)?.toString();
+      if (plan.trim().isEmpty) {
+        state = state.copyWith(isLoading: false, error: 'The AI returned an empty plan. Please try again.');
+        return;
       }
-
-      state = state.copyWith(isLoading: false, dietPlan: plan);
+      state = state.copyWith(isLoading: false, dietPlan: plan, planSource: source);
     } on DioException catch (e) {
       state = state.copyWith(
         isLoading: false,

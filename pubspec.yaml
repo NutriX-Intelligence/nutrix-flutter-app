@@ -53,6 +53,7 @@ dependencies:
 
   # Home screen widgets
   home_widget: ^0.7.0
+  flutter_markdown_plus: ^1.0.12
 
 dev_dependencies:
   flutter_test:

@@ -1,3 +1,4 @@
+import '../../widgets/common/nx_markdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -248,14 +249,12 @@ class _AiCoachScreenState extends ConsumerState<AiCoachScreen> {
                     ? null
                     : Border.all(color: Colors.white.withValues(alpha: 0.06)),
               ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  color: isUser ? Colors.white : context.textMain,
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-              ),
+              child: isUser
+                  ? Text(
+                      message.text,
+                      style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5),
+                    )
+                  : NxMarkdown(message.text),
             ),
           ),
           if (isUser) const SizedBox(width: 8),

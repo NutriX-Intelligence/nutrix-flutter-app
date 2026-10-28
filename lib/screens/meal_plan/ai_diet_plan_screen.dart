@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/ai_plan_provider.dart';
 import '../../widgets/common/nx_select_field.dart';
+import '../../widgets/common/nx_markdown.dart';
 
 class AiDietPlanScreen extends ConsumerStatefulWidget {
   const AiDietPlanScreen({super.key});
@@ -57,7 +58,7 @@ class _AiDietPlanScreenState extends ConsumerState<AiDietPlanScreen> {
                       child: Text(state.error!, style: const TextStyle(color: AppColors.error)),
                     ),
                   if (state.dietPlan != null && state.dietPlan!.isNotEmpty)
-                    _buildItinerary(state.dietPlan!),
+                    _buildPlan(state.dietPlan!, state.planSource),
                 ],
               ),
             ),
@@ -117,39 +118,32 @@ class _AiDietPlanScreenState extends ConsumerState<AiDietPlanScreen> {
     );
   }
 
-  Widget _buildItinerary(List<dynamic> plan) {
+  /// The plan is one Markdown text. A small hint shows when the answer came from
+  /// the limited local/offline mode instead of the main AI.
+  Widget _buildPlan(String plan, String? source) {
+    final limited = source == 'local' || source == 'offline';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Your Custom Plan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        if (limited) ...[
+          const SizedBox(height: 8),
+          Text(
+            source == 'offline' ? 'Limited mode: a basic plan, the AI is unavailable right now.' : 'Limited mode: shorter answer from the backup model.',
+            style: TextStyle(fontSize: 12, color: context.textMuted),
+          ),
+        ],
         const SizedBox(height: 16),
-        for (var day in plan)
-          Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: context.borderColor)),
-            child: Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                initiallyExpanded: plan.indexOf(day) == 0,
-                title: Text(day['day'] ?? 'Day', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                children: [
-                  for (var meal in day['meals'] ?? [])
-                    ListTile(
-                      title: Text(meal['type'] ?? 'Meal', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(meal['name'] ?? '', style: TextStyle(color: context.textMain)),
-                          const SizedBox(height: 4),
-                          Text('${meal['calories']} kcal • ${meal['protein']}g protein', style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      isThreeLine: true,
-                    )
-                ],
-              ),
-            ),
-          )
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: context.cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: context.borderColor),
+          ),
+          child: NxMarkdown(plan),
+        ),
       ],
     );
   }
